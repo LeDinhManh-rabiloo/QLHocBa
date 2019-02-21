@@ -1,0 +1,49 @@
+version: "3"
+
+services:
+  redis:
+    image: redis:3-alpine
+    networks:
+      - internal
+    restart: unless-stopped
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE:      homestead
+      MYSQL_USER:          homestead
+      MYSQL_PASSWORD:      secret
+    networks:
+      - internal
+    restart: unless-stopped
+
+  dbadmin:
+    image: adminer
+    depends_on:
+      - db
+    networks:
+      - internal
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  app:
+    image: oanhnn/php:7.2-laravel
+    depends_on:
+      - db
+      - redis
+    environment:
+      APP_ENABLE_WORKERS: 1
+      APP_ENABLE_SCHEDULE: 1
+    volumes:
+      - .:/var/www/html
+    networks:
+      - internal
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+networks:
+  internal:
+    driver: bridge
